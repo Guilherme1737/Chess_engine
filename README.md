@@ -1,33 +1,35 @@
 # Chess Coach
 
-Aplicativo local para capturar um tabuleiro de xadrez na tela, reconhecer automaticamente a posicao (FEN) com visao computacional leve (OpenCV) e apresentar as melhores linhas da engine no estilo **Lichess / Chess.com**.
+Aplicativo desktop local em Python/Tkinter para capturar um tabuleiro de xadrez na tela, reconhecer automaticamente a posicao (FEN) com visao computacional (OpenCV), permitir edicao manual das casas no tabuleiro e apresentar as melhores linhas da engine no estilo **Lichess / Chess.com**.
 
 ## Funcionalidades
 
-- **Captura e Selecao do Tabuleiro**:
-  - Deteccao geometrica automatica do tabuleiro (`BoardDetector`);
-  - **Seletor interativo com o mouse (`Selecionar area com mouse ✂`)**: sobreposicao em tela cheia estilo *Snipping Tool* para clicar e arrastar ao redor do tabuleiro (`RegionSelectorOverlay`);
-- **Reconhecimento Automatico de Pecas, Orientacao e Vez (`PieceRecognizer`)**:
-  - **Calibracao em 1 clique** na posicao inicial (`Calibrar posicao inicial`), salvando os templates em `calibration_data.npz` para uso em qualquer posicao futura;
-  - **Auto-orientacao**: detecta automaticamente se voce esta jogando de Brancas (`white`) ou Pretas (`black`) embaixo (`detect_orientation`);
-  - **Auto-vez e deteccao do ultimo lance**: compara a transicao do tabuleiro e ataques ao rei (`infer_turn_and_last_move`) para alternar sozinho entre `w` e `b`, indicando quando e a **SUA VEZ!** e destacando em amarelo o ultimo lance jogado no preview;
-- **Painel de Analise Estilo Lichess / Chess.com**:
-  - **Multi-PV (Top 3 linhas)** tanto para engines UCI externas (`UciEngine`) quanto para o avaliador local embutido (`LocalChessEvaluator`);
-  - **Figuras graficas das pecas (`28x28` px)** + **Notacao Algebrica com Figurinhas** (`♘f3`, `♗c4`, `♕h5+`) + linha de continuacao completa (`1. e4 e5 2. ♘f3 ♞c6 3. ♗b5`);
-  - **Barra de Avaliacao (Eval Bar)** vertical ao lado do preview do tabuleiro e **setas visuais** (verde para o 1º lance, azul para o 2º lance);
-- **Melhorias de UX e Modo de Treino**:
-  - Opcao **Fixar janela no topo (Always on Top)** para manter o painel visivel ao lado do navegador;
-  - Atalho **`F8`** para disparar `Capturar + Reconhecer + Analisar` rapidamente e botao **Copiar FEN**;
-  - **Modo de Treino** aceita lances em notacao em portugues (`Cf3`, `Bc4`, `Dh5`), ingles (`Nf3`), figurinhas (`♘f3`) ou UCI (`g1f3`).
+- **Tabuleiro Editavel (Inline e Editor Completo)**:
+  - Edicao direta clicando ou arrastando pecas no tabuleiro lateral (`240x240`) ou abrindo o **Editor Completo de Tabuleiro** (`BoardEditorDialog`);
+  - Opcao **Exibir tabuleiro editavel antes de analisar** para revisar/corrigir casas incertas antes de disparar a engine;
+  - **Aprendizado incremental de correcoes** (`learn_from_correction`): quando voce corrige uma casa manualmente, o reconhecedor aprende o template daquela peca para o tema atual.
+- **Validacao da Posicao Reconhecida (`validate_fen` / `is_suspicious`)**:
+  - Detecta dois reis em xeque simultaneamente, rei ausente ou multiplos reis, quantidade impossivel de pecas/promocoes, peao na 1ª/8ª fileira, reis adjacentes e vez invertida;
+  - Bloqueia analises automaticas quando a FEN reconhecida for ilegal ou suspeita (baixa confianca / muitas casas incertas).
+- **Historico de Posicoes e Lances (`PositionHistory`)**:
+  - Salva todas as FENs reconhecidas/editadas na sessao;
+  - Exibe a sequencia dos ultimos lances em SAN (`1. e4 e5 2. Nf3 Nc6`) e permite navegar com `⏮`, `◀ Voltar`, `Avancar ▶`, `⏭` (ou `Alt+Esquerda` / `Alt+Direita`).
+- **Analise UCI por Profundidade ou Limite de Tempo (`UciEngine`)**:
+  - Suporte a busca por **profundidade fixa** ou **tempo limite** (ex.: analisar por `5.0 s`), com botao **Parar (`⏹`)** e exibicao em tempo real da profundidade/velocidade da engine;
+  - Painel **Multi-PV (Top 3 linhas)** com icones das pecas, notacao com figurinhas (`♘f3`, `♗c4`), barra de avaliacao e **explicacao tatico-posicional curta** (`explain_move`: captura, ganha material, ameaca, garfo, xeque, desenvolvimento, controle do centro, roque, promocao).
+- **Modo de Treino Completo (`TrainingSession` / `evaluate_guess`)**:
+  - Aceita qualquer lance entre os melhores da engine dentro da tolerancia configuravel em centipawns (`tolerance_cp`);
+  - Registra acertos, erros, precisao (`%`), sequencia atual/recorde e perda media em centipawns.
+- **Configuracoes Persistentes e Exportacao**:
+  - Salva automaticamente regiao, orientacao, engine, profundidade, tempo limite, modo treino e geometria da janela em `settings.json`;
+  - Exporta a partida em **PGN**, copia **FEN + SAN + PV + avaliacao** e gera **Relatorio completo da sessao** em Markdown.
 
 ## Como executar
 
 ```bash
 python -m pip install -r requirements.txt
-python app.py --engine /caminho/para/stockfish
+python app.py
 ```
-
-*(O argumento `--engine` e opcional; se omitido, o avaliador local embutido sera utilizado).*
 
 ## Testes automatizados
 
